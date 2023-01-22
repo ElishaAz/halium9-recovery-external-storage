@@ -1,5 +1,5 @@
 # halium9-recovery-external-storage
-Install Halium 9 to recovery and external storage on Redmi Note 8 (ginkgo)
+Install Halium 9 to recovery and external storage on Redmi Note 8 (ginkgo) to allow Dual Booting.
 
 ## 1. Before starting
 As with any OS operations, there is a chance of loosing data, or even bricking your phone. **Back up any important data before starting**. I will not be held responsible for anything.
