@@ -1,9 +1,9 @@
 # halium9-recovery-external-storage
 Install Halium 9 to recovery and external storage on Redmi Note 8 (ginkgo)
 
-## 1. Before installing
+## 1. Before starting
 As with any OS operations, there is a chance of loosing data, or even bricking your phone. **Back up any important data before starting**. I will not be held responsible for anything.
-There are prebuilt images in the releases. If you are using those, you can skip sections 3 & 4. Make sure to pick the right image for your case. Use the `mmcblk1` if you are installing to the microsd card, and `sda` if you are installing to usb-otg.
+There are prebuilt images in the [releases](https://github.com/ElishaAz/halium9-recovery-external-storage/releases). If you are using those, you can skip sections 3 & 4. Make sure to pick the right image for your case. Use the `mmcblk1` if you are installing to the microsd card, and `sda` if you are installing to usb-otg.
 
 ## 2. Prepare your external storage
 1. You can use either a microsd card or usb-otg drive. It should be at least 10GB.
