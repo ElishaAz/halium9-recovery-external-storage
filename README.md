@@ -41,8 +41,8 @@ ln -s /halium-system/var/lib/lxc/android/android-rootfs.img android-rootfs.img
 8. Boot to any working system on your mobile device with the external storage plugged in.
 9. Open `/dev` in a terminal (e.g. `adb shell`) and note your external storage partitions' names (e.g `/dev/sda1 & /dev/sda2` for usb-otg and `/dev/mmcblk1p1 & /dev/mmcblk1p2` for microsd).
 
-## Create Halium Image
-- Download source and dependancies (this will also start building the default image).
+## Create Halium image
+1. Download source and dependancies (this will also start building the default image).
 ```
 sudo apt install android-tools-mkbootimg bc bison build-essential ca-certificates cpio curl flex git kmod libssl-dev libtinfo5 python2 unzip wget xz-utils git
 git clone https://gitlab.com/ubports/porting/community-ports/android9/xiaomi-redmi-note-8t/xiaomi-ginkgo-willow
@@ -50,6 +50,49 @@ cd xiaomi-ginkgo-willow
 git clone https://gitlab.com/ubports/community-ports/halium-generic-adaptation-build-tools build-tools
 ./build-tools/build.sh -b "build"
 ```
-- If you get the `yylloc` error: run `grep -rn "YYLTYPE yylloc"` in the kernel directory (`build/downloads/kernel-xiaomi-willow`) and to all occurences other than `dtc-lexer` add the `extern` keyword.
-- Go to the kernel directory `cd build/downloads/kernel-xiaomi-willow`.
-- Run `grep -rn by-name/vendor` 
+2. If you get the `yylloc` error: run `grep -rn "YYLTYPE yylloc"` in the kernel directory (`build/downloads/kernel-xiaomi-willow`) and to all occurences other than `dtc-lexer` add the `extern` keyword.
+3. Go to the kernel directory `cd build/downloads/kernel-xiaomi-willow`.
+4. Run `grep -rn by-name/vendor`  and replace all occurences with the path to your drive's first partition. E.g. for external storage, replace
+```cc
+vendor {
+    compatible = "android,vendor";
+    dev = "/dev/block/platform/soc/1d84000.ufshc/by-name/vendor";
+    mnt_flags = "ro,barrier=1,discard";
+    fsmgr_flags = "wait,slotselect,avb";
+    status = "ok";
+};
+```
+With
+```cc
+vendor {
+    compatible = "android,vendor";
+    dev = "/dev/sda1";
+    mnt_flags = "ro,barrier=1,discard";
+    fsmgr_flags = "wait,slotselect,avb";
+    status = "ok";
+};
+```
+5. Go back to the `xiaomi-ginkgo-willow` directory.
+6. Edit the file `deviceinfo`
+        - For Ubports, replace the path of `systempart=` with the path of the second partition on your drive (e.g. `systempart=/dev/sda2`).
+        - For Droidian, remove the `systempart=` from the commandline, and add `datapart=` with the path to the second partition on your drive (e.g. `datapart=/dev/sda2`).
+7. Build the image by running `./build-tools/build.sh -b "build"`
+8. You will find the output `boot.img` and `dtbo.img` images at `build/tmp/partitions`.
+
+### Turn the halium boot image into a recovey image
+1. Download [android image kitchen](https://forum.xda-developers.com/attachments/aik-linux-v3-8-all-tar-gz.5300923/) ([source code](https://github.com/osm0sis/Android-Image-Kitchen/tree/AIK-Linux)) and extract it.
+2. Download the latest twrp image for your device with the same android version as halium. I used [twrp-3.6.2_9-0-ginkgo.img](https://dl.twrp.me/ginkgo/twrp-3.6.2_9-0-ginkgo.img.html).
+3. Move it to the directory of andraid image kitchen.
+4. Unpack it by running `./unpackimg.sh twrp-3.6.2_9-0-ginkgo.img`
+5. Delete the ramdisk, and rename the `split_img` folder.
+6. Copy the `boot.img` we created in the previus section and unpack it too: `./unpackimg.sh boot.img`
+7. Copy the files back from the renamed `split_img` folder.
+8. Replace the `twrp-3.6.2_9-0-ginkgo.img-cmdline, twrp-3.6.2_9-0-ginkgo.img-kernel, twrp-3.6.2_9-0-ginkgo.img-ramdisk.cpio.gz` files with the files from the boot image. Replace `twrp-3.6.2_9-0-ginkgo.img-recovery_dtbo` with the `dtbo.img` we created in the previus section. Delete all the other files from the boot image (starting with `boot.img`).
+9. Repack the image: `./repackimg`
+10. The new image, `image-new.img`, is your halium9-recovery-external-storage image!
+
+### Install
+1. Flash `image-new.img` to recovery using fastboot: `fastboot flash recovery image-new.img`
+2. Reboot to recovery: `fastboot reboot recovery`
+3. Your halium OS should boot  without touching your primary OS!
+Note: if you have driver problems (e.g. the screen doesn't turn on) you can try rebooting to bootloader and then booting to recovery again to make sure nothing is left over from the newer android OS.
